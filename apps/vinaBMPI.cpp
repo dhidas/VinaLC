@@ -140,6 +140,24 @@ int main(int argc, char* argv[]) {
         }
         
         unsigned num_cpus = boost::thread::hardware_concurrency();
+
+        // Check for SLURM env parameter for better load management
+        int slurmcint = 0;
+        try {
+            char* slurmc = getenv("SLURM_CPUS_PER_TASK");
+            if (slurmc) {
+                slurmcint = atoi(slurmc);
+            }
+
+            // if SLURM_CPUS_PER_TASK is defined then limit the CPU usage
+            // to the allocated resource
+            if (slurmcint > 0) {
+                num_cpus = (unsigned) slurmcint;
+            }
+        } catch (...) {
+            // Do nothing if the above doesn't work
+        }
+
         if (num_cpus > 0)
             jobInput.cpu = num_cpus;
         else
